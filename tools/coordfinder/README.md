@@ -99,11 +99,19 @@ letting a coincidence read as an identification.
 
 ## Limitations
 
-- **Top-down only, for now.** A flat floor maps to the image by a homography, so an oblique shot can
-  be rectified — the geometry is not the obstacle. Resolution is: distant blocks are drawn from
-  lower mip levels, so the detail distinguishing rotations is physically absent from the image, not
-  merely squeezed. Rectification widens the usable region but cannot restore what was never
-  rendered.
+- **Oblique views are implemented but unproven.** `rectify.py` warps a flat floor to top-down via
+  the camera's homography. Its projection is validated against the top-down capture — both axis
+  signs and the 59.4 px block pitch match what the empirical calibration independently recovered —
+  but it has not yet been run against a real oblique screenshot end to end. Until it has, only the
+  top-down path is demonstrated.
+
+  Geometry is not the obstacle; sampling is. `usable_radius()` gives the honest cutoff: a block
+  needs ~16 px across its *worst* axis, and a floor at a grazing angle is foreshortened along the
+  view direction by `sin(elevation) = h/d`, so the legible pixels go as `focal·h/d²`, not `focal/d`.
+  From the sample capture (8.7 blocks up, fov 70, 720p) that is a radius of about 14 blocks.
+  Note it depends on camera *height*, not pitch — pitch decides what is in frame, not what is
+  legible. Beyond that radius Minecraft has already drawn the face from a lower mip level, so the
+  distinguishing detail is absent from the source image and no warping restores it.
 - **Exact match required.** One misread face and the true position drops out of the results
   entirely, rather than ranking lower. The reader has to be right, not close.
 - **A bounded search box.** Cost is proportional to volume searched. In practice an attacker has a
