@@ -42,3 +42,8 @@ replay_*.log
 
 # Output Releases
 /release/*.jar
+
+# Python
+__pycache__/
+*.pyc
+.venv/
