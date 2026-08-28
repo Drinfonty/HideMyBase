@@ -1,5 +1,5 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'com.modrinth.minotaur'
 }
 
@@ -12,11 +12,11 @@ loom {
 			// the title screen.
 			//
 			// This has to live here rather than as args() on the runClient task: Loom's
-			// RunGameTask builds its program arguments from the run config, and discards anything
-			// set on the task itself. Note this is Loom 1.17's RunConfiguration API - the older
-			// programArgs(...) helper silently does nothing here.
+			// RunGameTask builds its program arguments from the run config and discards anything
+			// set on the task itself. programArgs is the spelling that exists on both Loom 1.14
+			// and 1.17, so it is the one form that works on every branch.
 			if (project.hasProperty('quickPlay')) {
-				programArguments.addAll('--quickPlaySingleplayer', project.property('quickPlay').toString())
+				programArgs '--quickPlaySingleplayer', project.property('quickPlay').toString()
 			}
 		}
 	}
@@ -33,7 +33,8 @@ loom {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	implementation project(":common")
 }
@@ -82,11 +83,25 @@ jar {
 	}
 }
 
+remapJar {
+	archiveFileName = "hide-my-base-${project.mod_version}-${project.mc_version_suffix}-fabric.jar"
+}
+
+loom {
+	mixin {
+		// Must match :common - see the comment there.
+		useLegacyMixinAp = false
+	}
+}
+
+// On this branch the published artifact is remapJar's output, in the intermediary
+// namespace - not `jar`, which is still in named. Copying the wrong one would ship a jar
+// whose mixins silently do nothing on a real client.
 tasks.register('copyJarToRelease', Copy) {
-	from tasks.named('jar')
+	from tasks.named('remapJar')
 	into "${project.rootDir}/release"
 
-	mustRunAfter tasks.named('jar')
+	mustRunAfter tasks.named('remapJar')
 }
 
 tasks.named('build') {

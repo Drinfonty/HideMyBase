@@ -1,9 +1,14 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	// The Loom plugin id is the one thing that genuinely differs between the 26.x branches
+	// and the 1.21 line (fabric-loom-remap), and `plugins {}` requires a literal string, so
+	// it cannot come from a property. Everything else here is driven by gradle.properties
+	// and is identical across branches.
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 }
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.officialMojangMappings()
 	compileOnly "org.spongepowered:mixin:0.8.7"
 
 	// Loom's Minecraft jar annotates client-only classes with
@@ -51,4 +56,23 @@ java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(Integer.parseInt(project.java_version))
 	}
+}
+
+loom {
+	mixin {
+		// Pinned rather than left to the Loom default, following the same failure RedFX hit.
+		// The mixins live in :common but are packaged and remapped by the platform
+		// subprojects; Loom's legacy annotation-processor path writes its refmap into *this*
+		// project's build cache while :fabric:remapJar looks under its own, so the refmap is
+		// silently dropped and the redirects ship in Mojang names. Hard remapping reads the
+		// annotations straight from the bytecode, so it works whichever project compiled the
+		// class.
+		useLegacyMixinAp = false
+	}
+}
+
+// This branch remaps; :common's own jar stays in the named namespace so the platform
+// subprojects remap exactly once, at :fabric:remapJar.
+remapJar {
+	targetNamespace = "named"
 }
