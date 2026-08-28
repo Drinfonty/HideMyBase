@@ -55,6 +55,21 @@ tasks.register('installTestJar', Copy) {
 	}
 }
 
+// NeoForm decompiles and *recompiles* Minecraft in its own JVM, and that step calls javac
+// with --release. Gradle's toolchain resolution is free to hand it any matching Java
+// install, including a JRE - Debian ships one at /usr/lib/jvm/java-21-openjdk-amd64 - and a
+// JRE has no ct.sym, so the recompile dies with "error: release version N not supported"
+// long before any of this mod's code is touched.
+//
+// compilerFor only ever resolves an installation that can actually compile, so deriving the
+// executable from it pins NeoForm to a real JDK without naming a path. On a machine with no
+// matching JDK, the foojay resolver provisions one.
+tasks.withType(net.neoforged.nfrtgradle.NeoFormRuntimeTask).configureEach {
+	javaExecutable = javaToolchains.compilerFor {
+		languageVersion = JavaLanguageVersion.of(Integer.parseInt(project.java_version))
+	}.map { it.metadata.installationPath.file("bin/java").asFile.absolutePath }
+}
+
 dependencies {
 	implementation project(":common")
 }
