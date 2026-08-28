@@ -87,6 +87,12 @@ remapJar {
 	archiveFileName = "hide-my-base-${project.mod_version}-${project.mc_version_suffix}-fabric.jar"
 }
 
+// A dev runClient is a named-namespace game and will load these mixins from source no matter
+// what the published jar looks like. runProdClient launches Loader the way the real launcher
+// does - obfuscated game jar plus intermediary mappings - so a remapping mistake fails here
+// exactly as it would for a player.
+apply from: rootProject.file('gradle/prod-client.gradle')
+
 loom {
 	mixin {
 		// Must match :common - see the comment there.
