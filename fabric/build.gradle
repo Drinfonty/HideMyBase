@@ -41,11 +41,18 @@ dependencies {
 processResources {
 	def version = project.version
 	def minecraftDependency = project.minecraft_dependency
+	def fabricLoaderDependency = project.fabric_loader_dependency
+	def javaVersion = project.java_version
 	inputs.property "version", version
 	inputs.property "minecraftDependency", minecraftDependency
+	inputs.property "fabricLoaderDependency", fabricLoaderDependency
+	inputs.property "javaVersion", javaVersion
 
 	filesMatching("fabric.mod.json") {
-		expand "version": version, "minecraftDependency": minecraftDependency
+		expand "version": version,
+				"minecraftDependency": minecraftDependency,
+				"fabricLoaderDependency": fabricLoaderDependency,
+				"javaVersion": javaVersion
 	}
 }
 
