@@ -36,7 +36,7 @@ public final class HideMyBaseClient {
 	}
 
 	/**
-	 * Called from {@code MinecraftMixin} once a level is set, and with {@code null} when one is torn
+	 * Called from {@code LevelLifecycleMixin} once a level is set, and with {@code null} when one is torn
 	 * down. Running before any chunk of the new world has been meshed is what makes the volatile
 	 * handoff in {@link Scrambler} sufficient.
 	 */

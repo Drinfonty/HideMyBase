@@ -71,13 +71,13 @@ re-mesh, but there is no UI wired to it yet — see TODO.
 
 Five mixins, all `@Redirect` at a single call site each, all client-side:
 
-| Mixin | Target | Purpose |
+| Mixin | Target (on `main`) | Purpose |
 |---|---|---|
-| `SectionCompilerMixin` | `compile` | the chunk mesh — this is the feature |
-| `LevelRendererMixin` | `submitBlockDestroyAnimation` | crack overlay, must match the mesh under it |
-| `MovingBlockFeatureRendererMixin` | `buildGroup` | piston-pushed blocks, so rotation doesn't pop |
-| `ModelBlockRendererMixin` | `tesselateBlock` | the offset scramble |
-| `MinecraftMixin` | `setLevel` | pick up the salt on world join |
+| `ChunkMeshMixin` | `SectionCompiler.compile` | the chunk mesh — this is the feature |
+| `BreakOverlayMixin` | `LevelRenderer.submitBlockDestroyAnimation` | crack overlay, must match the mesh under it |
+| `MovingBlockMixin` | `MovingBlockFeatureRenderer.buildGroup` | piston-pushed blocks, so rotation doesn't pop |
+| `BlockOffsetMixin` | `ModelBlockRenderer.tesselateBlock` | the offset scramble |
+| `LevelLifecycleMixin` | `Minecraft.setLevel` | pick up the salt on world join |
 
 Redirects rather than an `@Inject` on `BlockStateBase.getSeed` for two reasons: they are render-only
 by construction, and they return a primitive, where a cancellable `@Inject` would box a `Long` for
@@ -134,19 +134,84 @@ Two things about the dev run are worth knowing before spending an afternoon on t
   This mod ships none and does not depend on Fabric API, so such a world stops on a missing-pack
   screen - equally silent. Use a world whose `DataPacks.Enabled` is just `vanilla`.
 
-## Version support
+## Branch & Minecraft Version Mapping
 
-Targets 26.2. Ports to 26.1.x and 1.21.x are planned.
+| Branch | Built Against | Supported Minecraft | Java |
+| :--- | :--- | :--- | :--- |
+| **`main`** | `26.2` | `26.2` | 25 |
+| **`legacy-26.1`** | `26.1.2` | `26.1` – `26.1.2` | 25 |
+| **`legacy-1.21.9`** | `1.21.11` | `1.21.9` – `1.21.11` | 21 |
+| **`legacy-1.21.5`** | `1.21.8` | `1.21.5` – `1.21.8` | 21 |
+| **`legacy-1.21.2`** | `1.21.4` | `1.21.2` – `1.21.4` | 21 |
+| **`legacy-1.21`** | `1.21.1` | `1.21` – `1.21.1` | 21 |
 
-The hooks themselves are unusually portable — `BlockState.getSeed(BlockPos)` and
-`BlockState.getOffset(BlockPos)` have been stable for many versions. What moves is the *enclosing*
-method names the redirects point at, and one API:
+### Why so many branches
 
-- `SectionCompiler.compile` was `ChunkRenderDispatcher`/`RenderChunkRegion` territory in 1.21.x.
-- `MovingBlockFeatureRenderer` is new in the 26.x render rework and has no 1.21.x equivalent.
-- `RenderRefresh` calls `LevelRenderer.invalidateCompiledGeometry(...)`, which replaced
-  `allChanged()` in 26.2. It is deliberately isolated and wrapped in a `catch (LinkageError |
-  RuntimeException)` so a signature change costs a rejoin, not a crash.
+The hooks are one-line redirects, but they are `require = 1`: if a target method is not
+found the game **crashes at class load** rather than quietly skipping the feature. So a
+branch may only advertise versions whose render path it actually compiled against. The
+render path moved four times across this range:
+
+| Change | First version | Effect |
+| :--- | :--- | :--- |
+| `BlockState.getOffset` loses its `BlockGetter` parameter | `1.21.2` | offset redirect descriptor changes |
+| Chunk meshing moves out of `BlockRenderDispatcher.renderBatched` into `SectionCompiler.compile` | `1.21.5` | the main hook changes class |
+| Piston/falling block rendering merges into `BlockFeatureRenderer`; `Minecraft.setLevel` drops its second parameter | `1.21.9` | two mixins collapse into one, lifecycle hook changes |
+| Break overlay moves from `BlockRenderDispatcher.renderBreakingTexture` to `LevelRenderer.submitBlockDestroyAnimation`; `BlockFeatureRenderer` gains `renderMovingBlockSubmits` | `26.1` | overlay and moving-block hooks change |
+| `BlockFeatureRenderer` splits and moving blocks land in `MovingBlockFeatureRenderer.buildGroup`; `LevelRenderer.allChanged()` becomes `invalidateCompiledGeometry(...)` | `26.2` | moving-block hook and refresh call change |
+
+## Branch Layout
+
+Seven branches. Six target a Minecraft version; one holds everything that does not.
+
+`shared` is an ancestor of every version branch, so its changes reach them by `git merge`
+rather than by six cherry-picks.
+
+### What lives where
+
+**Edit on `shared`** — merged into every version branch:
+
+- `README.md`, `LICENSE`, `.gitignore`
+- `gradle/mod.properties` — `mod_version`, `maven_group`, the store project ids
+- `PositionHash.java`, `WorldSalt.java`, `HideMyBase.java` — no Minecraft types at all
+- `ClientConfig.java`, `HideMyBaseClient.java`, `WorldKey.java` — Minecraft API that has not moved
+- the Fabric and NeoForge entry points, `fabric.mod.json`, `neoforge.mods.toml`
+- `common/src/test/**`
+- `settings.gradle`, `gradlew`, `gradle/wrapper/**`
+
+**Edit on the version branch** — never merged from `shared`:
+
+| File | Why it is per-branch |
+| :--- | :--- |
+| `gradle.properties` | Every Minecraft, Loom, NeoForge, Java and mixin-level value |
+| `build.gradle`, `common/build.gradle`, `fabric/build.gradle`, `neoforge/build.gradle` | The Loom plugin id needs a literal in `plugins {}`, so it cannot be a property |
+| `common/.../mixin/**` | The render-path targets in the table above |
+| `Scrambler.java` | Its `offset` signature follows `BlockState.getOffset` |
+| `RenderRefresh.java` | `allChanged()` vs `invalidateCompiledGeometry(...)` |
+| `hidemybase.mixins.json` | The mixin *list* differs — pre-`1.21.9` needs a separate falling-block mixin |
+
+> As in RedFX, `shared` still contains a frozen copy of every per-branch file. They are
+> deliberately never edited there: modifying them would conflict on every merge, and
+> deleting them would cause a modify/delete conflict instead. If you find yourself editing
+> one on `shared`, you are on the wrong branch.
+
+Everything that varies is pushed into `gradle.properties` and templated through
+`processResources`, so `fabric.mod.json`, `neoforge.mods.toml` and the mixin config are
+byte-identical across branches.
+
+### Making a change
+
+Version-agnostic (docs, the hash, config, a version bump):
+
+```bash
+git checkout shared
+# ...edit, commit...
+for b in main legacy-26.1 legacy-1.21.9 legacy-1.21.5 legacy-1.21.2 legacy-1.21; do
+  git checkout $b && git merge shared
+done
+```
+
+Version-specific: edit directly on the branch, never on `shared`.
 
 ## TODO
 

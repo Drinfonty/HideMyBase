@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * {@link Scrambler#offset} for why that split matters and what it costs.
  */
 @Mixin(ModelBlockRenderer.class)
-public class ModelBlockRendererMixin {
+public class BlockOffsetMixin {
 	@Redirect(
 		method = "tesselateBlock",
 		at = @At(

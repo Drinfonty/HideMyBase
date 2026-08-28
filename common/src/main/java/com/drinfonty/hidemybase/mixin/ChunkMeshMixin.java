@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * a {@code Long} for every block in every chunk.
  */
 @Mixin(SectionCompiler.class)
-public class SectionCompilerMixin {
+public class ChunkMeshMixin {
 	@Redirect(
 		method = "compile",
 		at = @At(

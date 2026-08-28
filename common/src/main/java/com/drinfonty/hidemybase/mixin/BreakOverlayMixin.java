@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * rotated face than the block you are mining.
  */
 @Mixin(LevelRenderer.class)
-public class LevelRendererMixin {
+public class BreakOverlayMixin {
 	@Redirect(
 		method = "submitBlockDestroyAnimation",
 		at = @At(

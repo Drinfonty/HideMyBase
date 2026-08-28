@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * lets {@link com.drinfonty.hidemybase.Scrambler} get away with a plain volatile handoff.
  */
 @Mixin(Minecraft.class)
-public class MinecraftMixin {
+public class LevelLifecycleMixin {
 	@Inject(method = "setLevel", at = @At("TAIL"))
 	private void hideMyBase$onSetLevel(ClientLevel level, CallbackInfo callback) {
 		HideMyBaseClient.onLevelChanged((Minecraft) (Object) this, level != null);

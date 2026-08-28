@@ -18,7 +18,7 @@ authors="Drinfonty"
 [[dependencies.hidemybase]]
 modId="neoforge"
 type="required"
-versionRange="[26.2.0,)"
+versionRange="${neoforgeDependency}"
 ordering="NONE"
 side="CLIENT"
 

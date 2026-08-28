@@ -22,6 +22,18 @@ dependencies {
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
+// The mixin config's compatibilityLevel is the one thing in it that changes between
+// branches (JAVA_25 on 26.x, JAVA_21 on the 1.21 line), so it is templated rather than
+// forked - the file is byte-identical on every branch and only the property differs.
+processResources {
+	def mixinCompatLevel = project.mixin_compat_level
+	inputs.property "mixinCompatLevel", mixinCompatLevel
+
+	filesMatching("hidemybase.mixins.json") {
+		expand "mixinCompatLevel": mixinCompatLevel
+	}
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 	testLogging {
@@ -31,12 +43,12 @@ tasks.named('test') {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 25
+	it.options.release = Integer.parseInt(project.java_version)
 }
 
 java {
 	withSourcesJar()
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(25)
+		languageVersion = JavaLanguageVersion.of(Integer.parseInt(project.java_version))
 	}
 }

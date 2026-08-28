@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * as it changes hands between this renderer and the chunk mesher.
  */
 @Mixin(MovingBlockFeatureRenderer.class)
-public class MovingBlockFeatureRendererMixin {
+public class MovingBlockMixin {
 	@Redirect(
 		method = "buildGroup",
 		at = @At(
