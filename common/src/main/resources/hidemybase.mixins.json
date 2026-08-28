@@ -1,0 +1,18 @@
+{
+	"required": true,
+	"package": "com.drinfonty.hidemybase.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"LevelRendererMixin",
+		"MinecraftMixin",
+		"ModelBlockRendererMixin",
+		"MovingBlockFeatureRendererMixin",
+		"SectionCompilerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"id": "hidemybase",
+	"version": "${version}",
+	"name": "HideMyBase",
+	"description": "Scrambles the position-derived block texture rotations that let anyone read your coordinates off a screenshot. Client-side and cosmetic only: it changes nothing the server can see, so it works on any server, vanilla included.",
+	"authors": [
+		"Drinfonty"
+	],
+	"contact": {
+		"sources": "https://github.com/Drinfonty/HideMyBase",
+		"issues": "https://github.com/Drinfonty/HideMyBase/issues"
+	},
+	"license": "CC0-1.0",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.drinfonty.hidemybase.fabric.HideMyBaseFabric"
+		]
+	},
+	"mixins": [
+		"hidemybase.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "${minecraftDependency}",
+		"java": ">=25"
+	}
+}

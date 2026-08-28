@@ -1,0 +1,156 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'com.modrinth.minotaur'
+}
+
+loom {
+	runs {
+		client {
+			// -PquickPlay=<save> boots straight into a world instead of the title screen. The
+			// render path only runs once a chunk is meshed, so verifying SectionCompilerMixin and
+			// ModelBlockRendererMixin applied at all needs a world - those classes never load from
+			// the title screen.
+			//
+			// This has to live here rather than as args() on the runClient task: Loom's
+			// RunGameTask builds its program arguments from the run config, and discards anything
+			// set on the task itself. Note this is Loom 1.17's RunConfiguration API - the older
+			// programArgs(...) helper silently does nothing here.
+			if (project.hasProperty('quickPlay')) {
+				programArguments.addAll('--quickPlaySingleplayer', project.property('quickPlay').toString())
+			}
+		}
+	}
+
+	// No splitEnvironmentSourceSets(): the mod is client-only, so a server source set would be an
+	// empty compartment that only makes the mixin config harder to place.
+	mods {
+		"hidemybase" {
+			sourceSet sourceSets.main
+			sourceSet project(":common").sourceSets.main
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	implementation project(":common")
+}
+
+processResources {
+	def version = project.version
+	def minecraftDependency = project.minecraft_dependency
+	inputs.property "version", version
+	inputs.property "minecraftDependency", minecraftDependency
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version, "minecraftDependency": minecraftDependency
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+}
+
+java {
+	withSourcesJar()
+
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+}
+
+jar {
+	archiveFileName = "hide-my-base-${project.mod_version}-${project.mc_version_suffix}-fabric.jar"
+	def projectName = project.name
+	inputs.property "projectName", projectName
+
+	from project(":common").sourceSets.main.output
+
+	// LICENSE lives at the repo root; a bare "LICENSE" resolves against the subproject
+	// directory, so this would silently package nothing.
+	from(rootProject.file("LICENSE")) {
+		rename { "${it}_$projectName"}
+	}
+}
+
+tasks.register('copyJarToRelease', Copy) {
+	from tasks.named('jar')
+	into "${project.rootDir}/release"
+
+	mustRunAfter tasks.named('jar')
+}
+
+tasks.named('build') {
+	finalizedBy('copyJarToRelease')
+}
+
+afterEvaluate {
+	// Only runClient: there is no server side to rehearse.
+	tasks.named('runClient') {
+		if (project.hasProperty('testJar')) {
+			dependsOn(tasks.named('jar'))
+			// Filter Loom's own run classpath rather than rebuilding it from runtimeClasspath -
+			// setClasspath(files()) drops the entries Loom adds for the run (natives, log config,
+			// the game jar) that runtimeClasspath does not carry. Removing the loose output
+			// directories leaves the jar as the only source of the mod.
+			setClasspath(classpath.filter { File file ->
+				!file.path.contains("common/build/classes") &&
+				!file.path.contains("common/build/resources") &&
+				!file.path.contains("fabric/build/classes") &&
+				!file.path.contains("fabric/build/resources")
+			})
+			classpath.from(tasks.named('jar'))
+		}
+
+		// -PmixinDebug turns on Mixin's own verbose reporting and dumps the transformed classes to
+		// run/.mixin.out. The redirects are require=1, so a target that stops resolving already
+		// crashes the game rather than silently no-opping - this is for confirming the positive
+		// case, that each redirect landed where it was meant to.
+		if (project.hasProperty('mixinDebug')) {
+			systemProperty 'mixin.debug.verbose', 'true'
+			systemProperty 'mixin.debug.export', 'true'
+			systemProperty 'mixin.debug.countInjections', 'true'
+		}
+
+		// A fresh run/ has no options.txt, which makes the game open the accessibility onboarding
+		// prompt on first launch. That modal pre-empts quickplay entirely and logs nothing, so the
+		// run just sits at a menu looking as though quickplay is broken. run/ is gitignored, so the
+		// file cannot simply be committed - write a minimal one when it is missing instead.
+		if (project.hasProperty('quickPlay')) {
+			doFirst {
+				def options = file('run/options.txt')
+
+				if (!options.exists()) {
+					options.parentFile.mkdirs()
+					options.text = 'onboardAccessibility:false\nnarrator:0\n'
+					logger.lifecycle("Wrote ${options} so the onboarding prompt cannot swallow quickplay")
+				}
+			}
+		}
+	}
+}
+
+if (rootProject.hasModrinthProject()) {
+	modrinth {
+		token = rootProject.getModrinthToken()
+		projectId = rootProject.modrinth_project_id
+
+		// ./gradlew modrinth -PmodrinthDebug validates the release and prints what would be sent,
+		// without uploading, so a publish can be rehearsed. Gated on a property rather than a
+		// hardcoded true so it cannot be left switched on by accident.
+		debugMode = project.hasProperty('modrinthDebug')
+		versionNumber = "${project.mod_version}-${project.mc_version_suffix}-fabric"
+		versionName = "HideMyBase ${project.mod_version} (Fabric)"
+		versionType = "release"
+		uploadFile = layout.buildDirectory.file("libs/hide-my-base-${project.mod_version}-${project.mc_version_suffix}-fabric.jar")
+		gameVersions = rootProject.modrinth_game_versions.split(",") as List
+		loaders = ["fabric"]
+
+		def notesFile = rootProject.file("release/release-note-${project.mod_version}.md")
+		if (notesFile.exists()) {
+			changelog = notesFile.text
+		}
+	}
+}

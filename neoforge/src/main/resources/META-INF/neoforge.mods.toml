@@ -1,0 +1,33 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+displayURL="https://github.com/Drinfonty/HideMyBase"
+issueTrackerURL="https://github.com/Drinfonty/HideMyBase/issues"
+license="CC0-1.0"
+
+[[mods]]
+modId="hidemybase"
+version="${modVersion}"
+displayName="HideMyBase"
+description='''
+Scrambles the position-derived block texture rotations that let anyone read your coordinates off a screenshot.
+
+Client-side and cosmetic only. It changes nothing any server can observe, so it works on any server including vanilla, and no one else needs to install it.
+'''
+authors="Drinfonty"
+
+[[dependencies.hidemybase]]
+modId="neoforge"
+type="required"
+versionRange="[26.2.0,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.hidemybase]]
+modId="minecraft"
+type="required"
+versionRange="${minecraftDependency}"
+ordering="NONE"
+side="CLIENT"
+
+[[mixins]]
+config="hidemybase.mixins.json"
