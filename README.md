@@ -207,10 +207,22 @@ byte-identical across branches.
 players install is `remapJar`'s output in the *intermediary* namespace - not `jar`, which stays
 named. `copyJarToRelease` takes `remapJar` for that reason. A dev `runClient` is a named-namespace
 game, so it will happily load a broken jar's mixins from source and look healthy while the
-published jar silently applies nothing. To check a real artifact, disassemble it and confirm the
-mixin annotations came out as `class_*`/`method_*` with no Mojang names left. Both `:common` and
-`:fabric` set `useLegacyMixinAp = false` so Loom rewrites the annotations in the bytecode instead
-of relying on a refmap that lands in the wrong project's cache.
+published jar silently applies nothing. Both `:common` and `:fabric` set `useLegacyMixinAp = false`
+so Loom rewrites the annotations in the bytecode instead of relying on a refmap that lands in the
+wrong project's cache.
+
+Verify a real artifact with the production client, never with `runClient`:
+
+```
+./gradlew :fabric:runProdClient -PquickPlay=<save> -PmixinDebug
+```
+
+It launches Fabric Loader the way the vanilla launcher does - obfuscated game jar plus
+intermediary mappings, the published jar as the only mod in `run-prod/mods` - so a mapping
+mistake fails there exactly as it would for a player. A healthy run logs
+`Mixing <Name> into net.minecraft.class_NNN` for every mixin; the failure mode is a `@Mixin
+target ... was not found` **warning** and a client that boots anyway, so check for the positive
+lines rather than for the absence of errors. Every 1.21 branch has been through this.
 
 **NeoForm needs a real JDK.** It recompiles Minecraft in its own JVM with `javac --release`, and
 Gradle will hand it a JRE if one matches the version - Debian ships a JRE 21. A JRE has no
