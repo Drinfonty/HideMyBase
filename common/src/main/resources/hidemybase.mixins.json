@@ -6,6 +6,7 @@
 		"BlockOffsetMixin",
 		"BreakOverlayMixin",
 		"ChunkMeshMixin",
+		"FallingBlockMixin",
 		"LevelLifecycleMixin",
 		"MovingBlockMixin"
 	],
