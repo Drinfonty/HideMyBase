@@ -1,6 +1,7 @@
 package com.drinfonty.hidemybase;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -68,7 +69,7 @@ public final class Scrambler {
 	}
 
 	/**
-	 * Redirect target for the two vanilla {@code BlockState.getOffset} render call sites.
+	 * Redirect target for the vanilla {@code BlockState.getOffset} render call site.
 	 *
 	 * <p>Unlike the seed, {@code getOffset} is also consulted by {@code BambooStalkBlock},
 	 * {@code PointedDripstoneBlock} and {@code SpeleothemBlock} when they build collision shapes, and
@@ -78,14 +79,18 @@ public final class Scrambler {
 	 *
 	 * <p>The offset math itself is vanilla's; only the coordinate handed to it is a decoy, so
 	 * per-block clamps still apply and offsets stay in their normal range.
+	 *
+	 * <p>Before 1.21.2 {@code getOffset} also takes the {@code BlockGetter}; the level is passed
+	 * straight through, since only the position is scrambled.
 	 */
-	public static Vec3 offset(BlockState state, BlockPos pos) {
+	public static Vec3 offset(BlockState state, BlockGetter level, BlockPos pos) {
 		if (!offsetActive || !state.hasOffsetFunction()) {
-			return state.getOffset(pos);
+			return state.getOffset(level, pos);
 		}
 
 		long decoy = PositionHash.offsetDecoy(salt, pos.getX(), pos.getZ());
 
-		return state.getOffset(new BlockPos(PositionHash.decoyX(decoy), pos.getY(), PositionHash.decoyZ(decoy)));
+		return state.getOffset(level,
+			new BlockPos(PositionHash.decoyX(decoy), pos.getY(), PositionHash.decoyZ(decoy)));
 	}
 }
