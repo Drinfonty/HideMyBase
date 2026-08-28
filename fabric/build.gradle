@@ -12,11 +12,11 @@ loom {
 			// the title screen.
 			//
 			// This has to live here rather than as args() on the runClient task: Loom's
-			// RunGameTask builds its program arguments from the run config, and discards anything
-			// set on the task itself. Note this is Loom 1.17's RunConfiguration API - the older
-			// programArgs(...) helper silently does nothing here.
+			// RunGameTask builds its program arguments from the run config and discards anything
+			// set on the task itself. programArgs is the spelling that exists on both Loom 1.14
+			// and 1.17, so it is the one form that works on every branch.
 			if (project.hasProperty('quickPlay')) {
-				programArguments.addAll('--quickPlaySingleplayer', project.property('quickPlay').toString())
+				programArgs '--quickPlaySingleplayer', project.property('quickPlay').toString()
 			}
 		}
 	}
