@@ -48,7 +48,7 @@ class VanillaRandomFixtureTest {
 			int z = pick.nextInt(4_000_000) - 2_000_000;
 
 			long seed = Mth.getSeed(x, y, z);
-			RandomSource random = RandomSource.createThreadLocalInstance(0L);
+			RandomSource random = RandomSource.create(0L);
 
 			// 4 and 16 are the two vanilla variant counts; 3 is not used by any block but exercises
 			// nextInt's rejection path, which a power-of-two-only test would never reach.
