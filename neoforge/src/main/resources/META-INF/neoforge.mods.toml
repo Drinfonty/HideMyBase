@@ -14,6 +14,7 @@ Scrambles the position-derived block texture rotations that let anyone read your
 Client-side and cosmetic only. It changes nothing any server can observe, so it works on any server including vanilla, and no one else needs to install it.
 '''
 authors="Drinfonty"
+logoFile="assets/hidemybase/icon.png"
 
 [[dependencies.hidemybase]]
 modId="neoforge"
