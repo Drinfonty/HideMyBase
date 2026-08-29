@@ -175,6 +175,7 @@ rather than by six cherry-picks.
 
 - `README.md`, `LICENSE`, `.gitignore`
 - `gradle/mod.properties` — `mod_version`, `maven_group`, the store project ids
+- `release/release-note-*.md` — one note per version, shared by every branch
 - `PositionHash.java`, `WorldSalt.java`, `HideMyBase.java` — no Minecraft types at all
 - `ClientConfig.java`, `HideMyBaseClient.java`, `WorldKey.java` — Minecraft API that has not moved
 - the Fabric and NeoForge entry points, `fabric.mod.json`, `neoforge.mods.toml`
