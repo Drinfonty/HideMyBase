@@ -57,8 +57,12 @@ public class HideMyBaseConfigScreen extends Screen {
 		int left = centre - WIDGET_WIDTH / 2;
 		int y = Math.max(30, this.height / 2 - 100);
 
+		// Sized to fit rather than centred with alignCenter(), which 26.2's StringWidget no longer
+		// has. A widget exactly as wide as its text is centred whatever the default alignment is,
+		// so this stays version-neutral.
+		int titleWidth = this.font.width(this.title);
 		this.addRenderableWidget(
-			new StringWidget(left, y, WIDGET_WIDTH, 20, this.title, this.font));
+			new StringWidget(centre - titleWidth / 2, y, titleWidth, 20, this.title, this.font));
 		y += ROW_HEIGHT + 6;
 
 		this.addRenderableWidget(CycleButton.onOffBuilder(config.enabled)
