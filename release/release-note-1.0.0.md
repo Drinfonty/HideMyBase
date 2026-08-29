@@ -28,11 +28,16 @@ HideMyBase mixes a secret into that hash. Rotations stay stable — nothing flic
 shimmers as you walk, and chunks still cache normally — but the pattern no longer matches the
 public formula. Someone with your screenshot now has nothing to search against.
 
-**There is nothing to configure.** Install it and it works. A secret is generated the first
-time you run it and kept on your computer.
+**There is nothing to configure.** Install it and it works.
 
-Each world and each server gets its own scramble, so a screenshot of one base tells nobody
-anything about another.
+The secret is generated fresh every time you start the game and is never written to disk, so
+there is nothing stored for anyone to find, and nothing for you to manage. Each world and each
+server also gets its own scramble, so a screenshot of one base tells nobody anything about
+another.
+
+One consequence worth knowing: because the secret changes each launch, block textures will be
+rotated differently next time you play. Nobody builds with those rotations — the game picks them
+for you — but a stone wall may look subtly different from session to session.
 
 ## Worth knowing
 
@@ -43,8 +48,9 @@ know where the edges are:
   the moon phase and the debug screen all still give you away. Turn off F3 before you post.
 - **Another player standing in your base sees vanilla rotations.** The scramble happens in
   your game, on your screen. It protects your screenshots, not theirs.
-- **It is not protection from someone using your computer.** The secret sits in your config
-  folder in plain sight. This is defence against a picture, not against your machine.
+- **It does not protect screenshots you already posted.** Each session uses a new secret, so a
+  picture keeps whatever scramble it was taken with. What that buys you is that a secret which
+  somehow leaks only ever affects the one session it belonged to.
 - **Anyone can still find your base the old-fashioned way** — by following you, by looking at
   a map, or by exploring.
 
@@ -56,13 +62,6 @@ ModMenu; on **NeoForge** it is the Config button in the mods list.
 - **Protection** — turn the whole thing off without uninstalling.
 - **Scramble block rotations** — the main feature. On by default.
 - **Separate secret per world** — a different scramble per world and per server. On by default.
-- **Secret** — your key, hidden by default. **Reveal secret** shows it; **New secret** rolls a
-  fresh one and re-scrambles the world straight away.
-
-  Keep it off stream. Anyone who sees your secret can undo the scramble on every screenshot you
-  have ever posted, which is exactly what the mod is there to prevent. Rolling a new one protects
-  what you post next — pictures already out there keep the old scramble.
-
 - **Scramble plant positions** — **off by default**, and deliberately so. Grass, flowers, bamboo and
   dripstone are also nudged sideways by a position-derived amount, which is a second, smaller
   leak. Scrambling it closes that, but Minecraft also uses the same value for the collision
