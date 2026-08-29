@@ -48,21 +48,28 @@ isn't free, so you opt in.
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "enabled": true,
   "scrambleRotation": true,
   "scrambleOffset": false,
-  "perWorldSalt": true,
-  "secret": "<32 hex chars, generated once>"
+  "perWorldSalt": true
 }
 ```
 
-`secret` is 128 bits from `SecureRandom`, generated once and never sent anywhere. Delete the field to
-reroll it — every world's appearance changes.
+There is deliberately no secret in that file. The scramble key is 128 bits from `SecureRandom`,
+minted at startup by `SessionSecret` and never written anywhere.
 
-With `perWorldSalt` on (the default), the effective salt is `SHA-256(secret || worldKey)` folded to
-64 bits, where `worldKey` is the save name in singleplayer or the server address in multiplayer. A
-screenshot of one world therefore reveals nothing about another.
+Against a single leaked screenshot a stored secret and a session secret are equally strong — the
+attacker has neither. The difference is blast radius: a stored secret that leaks, off disk or on
+stream, retroactively exposes every screenshot ever posted, while a session secret exposes one
+session's. It also bounds a subtler attack, where a screenshot at a coordinate the attacker already
+knows supplies known-position observations to solve the secret with; `PositionHash` is a fast mixing
+function, not a keyed cryptographic PRF, so that is not a bet worth taking indefinitely. The cost is
+that block textures rotate differently each launch.
+
+With `perWorldSalt` on (the default), the effective salt is `SHA-256(sessionSecret || worldKey)`
+folded to 64 bits, where `worldKey` is the save name in singleplayer or the server address in
+multiplayer. A screenshot of one world therefore reveals nothing about another.
 
 Changing settings takes effect on the next world join. `HideMyBaseClient.reload()` forces a live
 re-mesh, but there is no UI wired to it yet — see TODO.
@@ -176,7 +183,7 @@ rather than by six cherry-picks.
 - `README.md`, `LICENSE`, `.gitignore`
 - `gradle/mod.properties` — `mod_version`, `maven_group`, the store project ids
 - `release/release-note-*.md` — one note per version, shared by every branch
-- `PositionHash.java`, `WorldSalt.java`, `HideMyBase.java` — no Minecraft types at all
+- `PositionHash.java`, `WorldSalt.java`, `SessionSecret.java`, `HideMyBase.java` — no Minecraft types at all
 - `ClientConfig.java`, `HideMyBaseClient.java`, `WorldKey.java` — Minecraft API that has not moved
 - `HideMyBaseConfigScreen.java` — widget-only, so it survives the 26.x render rework unchanged
 - the Fabric and NeoForge entry points, `fabric.mod.json`, `neoforge.mods.toml`
