@@ -178,6 +178,7 @@ rather than by six cherry-picks.
 - `release/release-note-*.md` — one note per version, shared by every branch
 - `PositionHash.java`, `WorldSalt.java`, `HideMyBase.java` — no Minecraft types at all
 - `ClientConfig.java`, `HideMyBaseClient.java`, `WorldKey.java` — Minecraft API that has not moved
+- `HideMyBaseConfigScreen.java` — widget-only, so it survives the 26.x render rework unchanged
 - the Fabric and NeoForge entry points, `fabric.mod.json`, `neoforge.mods.toml`
 - `common/src/test/**`
 - `settings.gradle`, `gradlew`, `gradle/wrapper/**`
@@ -186,10 +187,11 @@ rather than by six cherry-picks.
 
 | File | Why it is per-branch |
 | :--- | :--- |
-| `gradle.properties` | Every Minecraft, Loom, NeoForge, Java and mixin-level value |
+| `gradle.properties` | Every Minecraft, Loom, NeoForge, Java, mixin-level and ModMenu value |
 | `build.gradle`, `common/build.gradle`, `fabric/build.gradle`, `neoforge/build.gradle` | The Loom plugin id needs a literal in `plugins {}`, so it cannot be a property |
 | `common/.../mixin/**` | The render-path targets in the table above |
 | `Scrambler.java` | Its `offset` signature follows `BlockState.getOffset` |
+| `ScreenCompat.java` | `setScreen` vs `setScreenAndShow`, which do not overlap across the range |
 | `RenderRefresh.java` | `allChanged()` vs `invalidateCompiledGeometry(...)` |
 | `hidemybase.mixins.json` | The mixin *list* differs — pre-`1.21.9` needs a separate falling-block mixin |
 

@@ -88,6 +88,11 @@ public final class ClientConfig {
 		}
 	}
 
+	/** Roll a fresh secret. Everything scrambles differently from the next world load onwards. */
+	public void regenerateSecret() {
+		secret = generateSecret();
+	}
+
 	private static String generateSecret() {
 		byte[] bytes = new byte[SECRET_BYTES];
 		new SecureRandom().nextBytes(bytes);

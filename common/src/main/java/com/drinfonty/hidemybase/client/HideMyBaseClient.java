@@ -65,6 +65,29 @@ public final class HideMyBaseClient {
 	}
 
 	/**
+	 * Persist the settings the screen just changed, re-arm, and re-mesh what is already drawn.
+	 *
+	 * <p>Distinct from {@link #reload()}, which re-reads the file from disk: here the in-memory
+	 * config is the newer copy and the file is the stale one, so reading it back would undo the
+	 * change that was just made.
+	 */
+	public static void applyAndSave() {
+		if (configFile != null) {
+			ClientConfig.save(config, configFile);
+		}
+
+		Minecraft minecraft = Minecraft.getInstance();
+
+		if (minecraft.level == null) {
+			Scrambler.leave();
+			return;
+		}
+
+		apply(minecraft);
+		RenderRefresh.rebuildAll(minecraft);
+	}
+
+	/**
 	 * Re-arm and rebuild the world after a settings change. Only reachable from a config edit today,
 	 * but the rebuild has to exist somewhere: chunks meshed under the old salt keep their old
 	 * rotations until something invalidates them.
