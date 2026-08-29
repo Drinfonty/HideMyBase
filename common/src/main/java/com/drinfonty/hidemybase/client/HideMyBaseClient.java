@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 import com.drinfonty.hidemybase.HideMyBase;
 import com.drinfonty.hidemybase.Scrambler;
+import com.drinfonty.hidemybase.SessionSecret;
 import com.drinfonty.hidemybase.WorldSalt;
 import com.drinfonty.hidemybase.config.ClientConfig;
 
@@ -26,9 +27,9 @@ public final class HideMyBaseClient {
 	public static void init(Path configDirectory) {
 		configFile = configDirectory.resolve(HideMyBase.MOD_ID + ".json");
 		config = ClientConfig.load(configFile);
-		HideMyBase.LOGGER.info("{} ready (rotation={}, offset={}, perWorldSalt={})", HideMyBase.MOD_NAME,
-			config.enabled && config.scrambleRotation, config.enabled && config.scrambleOffset,
-			config.perWorldSalt);
+		HideMyBase.LOGGER.info("{} ready (rotation={}, offset={}, perWorldSalt={}, session secret)",
+			HideMyBase.MOD_NAME, config.enabled && config.scrambleRotation,
+			config.enabled && config.scrambleOffset, config.perWorldSalt);
 	}
 
 	public static ClientConfig config() {
@@ -51,15 +52,13 @@ public final class HideMyBaseClient {
 
 	/** Arm the scrambler for the world the client is currently in. */
 	public static void apply(Minecraft minecraft) {
-		byte[] secret = config.decodeSecret();
-
-		if (!config.enabled || secret == null) {
+		if (!config.enabled) {
 			Scrambler.leave();
 			return;
 		}
 
 		String worldKey = config.perWorldSalt ? WorldKey.of(minecraft) : "";
-		long salt = WorldSalt.derive(secret, worldKey);
+		long salt = WorldSalt.derive(SessionSecret.get(), worldKey);
 
 		Scrambler.enter(salt, config.scrambleRotation, config.scrambleOffset);
 	}
