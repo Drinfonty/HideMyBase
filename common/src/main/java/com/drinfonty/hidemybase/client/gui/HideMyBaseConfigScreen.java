@@ -14,8 +14,10 @@ import net.minecraft.network.chat.Component;
 /**
  * The settings screen, reached from ModMenu on Fabric and the Config button on NeoForge.
  *
- * <p>It exists because a JSON file is a bad interface for the one thing a player actually needs to
- * do here - roll a new secret - and most players will never find {@code config/hidemybase.json}.
+ * <p>It exists because most players will never find {@code config/hidemybase.json}. It is short
+ * because there is little to decide: the scramble key is minted fresh every session and never
+ * stored, so there is no secret to show, reveal or roll - which is exactly what the earlier
+ * reveal-and-reroll controls were for.
  *
  * <p>Built entirely from widgets, with no {@code render} override and no direct drawing. That is
  * deliberate: 26.x replaced {@code render(GuiGraphics, ...)} with
@@ -32,12 +34,8 @@ public class HideMyBaseConfigScreen extends Screen {
 	private static final int WIDGET_WIDTH = 260;
 	private static final int BUTTON_WIDTH = 128;
 
-	/** Long enough to show the secret is 32 hex characters, short enough not to hint at any of it. */
-	private static final String MASK = "•".repeat(32);
-
 	private final Screen parent;
 
-	private boolean revealed;
 
 	public HideMyBaseConfigScreen(Screen parent) {
 		super(Component.literal(HideMyBase.MOD_NAME));
@@ -100,30 +98,12 @@ public class HideMyBaseConfigScreen extends Screen {
 		this.addRenderableWidget(perWorld);
 		y += ROW_HEIGHT + 10;
 
-		addCentredLabel(secretText(), centre, y);
-		y += ROW_HEIGHT;
-
-		this.addRenderableWidget(Button.builder(revealText(), button -> {
-				this.revealed = !this.revealed;
-				this.rebuildWidgets();
-			})
-			.bounds(left, y, BUTTON_WIDTH, 20)
-			.tooltip(Tooltip.create(Component.literal(
-				"Hidden by default on purpose. Anyone who sees your secret can undo the scramble "
-					+ "for every screenshot you have ever posted, so do not reveal it on stream.")))
-			.build());
-
-		this.addRenderableWidget(Button.builder(Component.literal("New secret"), button -> {
-				config().regenerateSecret();
-				HideMyBaseClient.applyAndSave();
-				this.rebuildWidgets();
-			})
-			.bounds(left + WIDGET_WIDTH - BUTTON_WIDTH, y, BUTTON_WIDTH, 20)
-			.tooltip(Tooltip.create(Component.literal(
-				"Rolls a new random secret and re-scrambles the world immediately.\n\n"
-					+ "Do this if you think your secret has been seen. Screenshots you posted "
-					+ "before now keep the old scramble - this protects what you post next.")))
-			.build());
+		addCentredLabel(
+			Component.literal("A new secret is generated each time you start the game."),
+			centre, y);
+		y += ROW_HEIGHT - 8;
+		addCentredLabel(
+			Component.literal("Nothing is stored, so there is nothing to leak."), centre, y);
 		y += ROW_HEIGHT + 10;
 
 		this.addRenderableWidget(Button.builder(Component.literal("Done"), button -> this.onClose())
@@ -142,20 +122,6 @@ public class HideMyBaseConfigScreen extends Screen {
 	private void addCentredLabel(Component text, int centre, int y) {
 		int width = this.font.width(text);
 		this.addRenderableWidget(new StringWidget(centre - width / 2, y, width, 20, text, this.font));
-	}
-
-	private Component secretText() {
-		String secret = config().secret;
-
-		if (secret == null || secret.isEmpty()) {
-			return Component.literal("Secret: (not generated yet)");
-		}
-
-		return Component.literal("Secret: " + (this.revealed ? secret : MASK));
-	}
-
-	private Component revealText() {
-		return Component.literal(this.revealed ? "Hide secret" : "Reveal secret");
 	}
 
 	@Override
