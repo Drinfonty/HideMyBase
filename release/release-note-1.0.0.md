@@ -50,13 +50,20 @@ know where the edges are:
 
 ## Options
 
-The config file is `config/hidemybase.json`. You will not normally need to touch it.
+There is a settings screen in game. On **Fabric** it is the config button beside HideMyBase in
+ModMenu; on **NeoForge** it is the Config button in the mods list.
 
-- `enabled` — turn the whole thing off without uninstalling.
-- `scrambleRotation` — the main feature. On by default.
-- `perWorldSalt` — a separate scramble per world and per server. On by default.
-- `secret` — your key. Delete this line to reroll it; every world then looks different.
-- `scrambleOffset` — **off by default**, and deliberately so. Grass, flowers, bamboo and
+- **Protection** — turn the whole thing off without uninstalling.
+- **Scramble block rotations** — the main feature. On by default.
+- **Separate secret per world** — a different scramble per world and per server. On by default.
+- **Secret** — your key, hidden by default. **Reveal secret** shows it; **New secret** rolls a
+  fresh one and re-scrambles the world straight away.
+
+  Keep it off stream. Anyone who sees your secret can undo the scramble on every screenshot you
+  have ever posted, which is exactly what the mod is there to prevent. Rolling a new one protects
+  what you post next — pictures already out there keep the old scramble.
+
+- **Scramble plant positions** — **off by default**, and deliberately so. Grass, flowers, bamboo and
   dripstone are also nudged sideways by a position-derived amount, which is a second, smaller
   leak. Scrambling it closes that, but Minecraft also uses the same value for the collision
   boxes of bamboo, dripstone and speleothems, and only your client is scrambled — so those
@@ -64,7 +71,8 @@ The config file is `config/hidemybase.json`. You will not normally need to touch
   flowers have no collision and are unaffected. Turn it on if you want the extra coverage and
   can live with that.
 
-Changes take effect the next time you load a world.
+Changes apply immediately — there is no save button. Everything is stored in
+`config/hidemybase.json` if you would rather edit it by hand.
 
 ## Does it actually work?
 
@@ -97,3 +105,7 @@ wrong one will fail to load rather than misbehave quietly.
 
 Each is available for both **Fabric** and **NeoForge**. Every build was launched into a real
 world of its own Minecraft version to confirm it loads and takes effect.
+
+On Fabric the settings screen needs **ModMenu**, because Fabric has no mod list of its own.
+Without it the mod still works exactly the same; there is just nowhere to put the screen, and you
+can edit the config file instead. NeoForge needs nothing extra.
