@@ -44,8 +44,8 @@ ext.getModrinthToken = {
 	return token
 }
 
-// The Modrinth project does not exist yet. Publishing config is skipped entirely until
-// modrinth_project_id is set in gradle.properties, so `build` never trips over it.
+// Publishing config is skipped entirely unless modrinth_project_id is set (it lives in
+// gradle/mod.properties, shared by every branch), so `build` never trips over a blank id.
 ext.hasModrinthProject = {
 	return rootProject.modrinth_project_id != null && !rootProject.modrinth_project_id.trim().isEmpty()
 }
