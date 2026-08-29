@@ -34,6 +34,7 @@ loom {
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 
 	implementation project(":common")
 }
