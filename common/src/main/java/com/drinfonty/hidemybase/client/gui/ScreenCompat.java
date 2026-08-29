@@ -14,7 +14,7 @@ import net.minecraft.client.gui.screens.Screen;
  * every string - identical on all six branches, so this file is the only thing to re-check when
  * porting the screen.
  *
- * <p>This branch targets 26.2.
+ * <p>This branch targets 26.2, which has only setScreenAndShow.
  */
 final class ScreenCompat {
 	private ScreenCompat() {
