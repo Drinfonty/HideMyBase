@@ -38,8 +38,6 @@ public class HideMyBaseConfigScreen extends Screen {
 	private final Screen parent;
 
 	private boolean revealed;
-	private StringWidget secretLabel;
-	private Button revealButton;
 
 	public HideMyBaseConfigScreen(Screen parent) {
 		super(Component.literal(HideMyBase.MOD_NAME));
@@ -57,12 +55,7 @@ public class HideMyBaseConfigScreen extends Screen {
 		int left = centre - WIDGET_WIDTH / 2;
 		int y = Math.max(30, this.height / 2 - 100);
 
-		// Sized to fit rather than centred with alignCenter(), which 26.2's StringWidget no longer
-		// has. A widget exactly as wide as its text is centred whatever the default alignment is,
-		// so this stays version-neutral.
-		int titleWidth = this.font.width(this.title);
-		this.addRenderableWidget(
-			new StringWidget(centre - titleWidth / 2, y, titleWidth, 20, this.title, this.font));
+		addCentredLabel(this.title, centre, y);
 		y += ROW_HEIGHT + 6;
 
 		this.addRenderableWidget(CycleButton.onOffBuilder(config.enabled)
@@ -107,26 +100,23 @@ public class HideMyBaseConfigScreen extends Screen {
 		this.addRenderableWidget(perWorld);
 		y += ROW_HEIGHT + 10;
 
-		this.secretLabel = new StringWidget(left, y, WIDGET_WIDTH, 20, secretText(), this.font);
-		this.addRenderableWidget(this.secretLabel);
+		addCentredLabel(secretText(), centre, y);
 		y += ROW_HEIGHT;
 
-		this.revealButton = Button.builder(revealText(), button -> {
+		this.addRenderableWidget(Button.builder(revealText(), button -> {
 				this.revealed = !this.revealed;
-				this.secretLabel.setMessage(secretText());
-				this.revealButton.setMessage(revealText());
+				this.rebuildWidgets();
 			})
 			.bounds(left, y, BUTTON_WIDTH, 20)
 			.tooltip(Tooltip.create(Component.literal(
 				"Hidden by default on purpose. Anyone who sees your secret can undo the scramble "
 					+ "for every screenshot you have ever posted, so do not reveal it on stream.")))
-			.build();
-		this.addRenderableWidget(this.revealButton);
+			.build());
 
 		this.addRenderableWidget(Button.builder(Component.literal("New secret"), button -> {
 				config().regenerateSecret();
 				HideMyBaseClient.applyAndSave();
-				this.secretLabel.setMessage(secretText());
+				this.rebuildWidgets();
 			})
 			.bounds(left + WIDGET_WIDTH - BUTTON_WIDTH, y, BUTTON_WIDTH, 20)
 			.tooltip(Tooltip.create(Component.literal(
@@ -139,6 +129,19 @@ public class HideMyBaseConfigScreen extends Screen {
 		this.addRenderableWidget(Button.builder(Component.literal("Done"), button -> this.onClose())
 			.bounds(centre - BUTTON_WIDTH / 2, y, BUTTON_WIDTH, 20)
 			.build());
+	}
+
+	/**
+	 * A label exactly as wide as its own text, positioned so that text is centred.
+	 *
+	 * <p>Neither {@code alignCenter()} nor a fixed-width widget works across the range: 26.2
+	 * dropped the alignment methods, and {@code StringWidget}'s default alignment is not the same
+	 * on both ends - a full-width label came out left-aligned on 26.2 and centred on 1.21.1. Sizing
+	 * the widget to the string sidesteps alignment altogether.
+	 */
+	private void addCentredLabel(Component text, int centre, int y) {
+		int width = this.font.width(text);
+		this.addRenderableWidget(new StringWidget(centre - width / 2, y, width, 20, text, this.font));
 	}
 
 	private Component secretText() {
