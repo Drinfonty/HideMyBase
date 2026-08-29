@@ -6,8 +6,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.SecureRandom;
-import java.util.HexFormat;
 
 import com.drinfonty.hidemybase.HideMyBase;
 import com.google.gson.Gson;
@@ -18,16 +16,16 @@ import com.google.gson.JsonSyntaxException;
  * {@code config/hidemybase.json}. Client-only by nature: every setting here changes what this
  * client draws and nothing that any server can observe.
  *
- * <p>The {@code secret} is the one field that matters for the mod's purpose. It is generated once
- * from {@link SecureRandom} and never leaves the machine; anyone who has it can reverse the
- * scramble, so it is written with the same care as the rest of the file and no more - this protects
- * against someone reading a screenshot, not against someone reading the disk.
+ * <p>Deliberately holds no secret. The scramble key is minted per session by
+ * {@link com.drinfonty.hidemybase.SessionSecret} and never written anywhere, so this file contains
+ * nothing worth stealing. Schema 2 exists precisely to strip the stored secret that schema 1 wrote:
+ * the version bump forces a rewrite, and since the field no longer exists on this class it is
+ * dropped on the way out.
  */
 public final class ClientConfig {
-	public static final int SCHEMA_VERSION = 1;
+	public static final int SCHEMA_VERSION = 2;
 
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-	private static final int SECRET_BYTES = 16;
 
 	public int schemaVersion = SCHEMA_VERSION;
 
@@ -56,9 +54,6 @@ public final class ClientConfig {
 	 */
 	public boolean perWorldSalt = true;
 
-	/** Hex-encoded install secret. Regenerated if absent or malformed; delete it to reroll. */
-	public String secret = "";
-
 	public boolean repair() {
 		boolean repaired = false;
 
@@ -67,36 +62,7 @@ public final class ClientConfig {
 			repaired = true;
 		}
 
-		if (decodeSecret() == null) {
-			secret = generateSecret();
-			repaired = true;
-		}
-
 		return repaired;
-	}
-
-	/** The install secret as bytes, or {@code null} if the stored value is unusable. */
-	public byte[] decodeSecret() {
-		if (secret == null || secret.length() != SECRET_BYTES * 2) {
-			return null;
-		}
-
-		try {
-			return HexFormat.of().parseHex(secret);
-		} catch (IllegalArgumentException malformed) {
-			return null;
-		}
-	}
-
-	/** Roll a fresh secret. Everything scrambles differently from the next world load onwards. */
-	public void regenerateSecret() {
-		secret = generateSecret();
-	}
-
-	private static String generateSecret() {
-		byte[] bytes = new byte[SECRET_BYTES];
-		new SecureRandom().nextBytes(bytes);
-		return HexFormat.of().formatHex(bytes);
 	}
 
 	public static ClientConfig load(Path file) {
@@ -121,8 +87,8 @@ public final class ClientConfig {
 			ClientConfig config = GSON.fromJson(reader, ClientConfig.class);
 			return config == null ? new ClientConfig() : config;
 		} catch (IOException | JsonSyntaxException broken) {
-			// A broken config must not cost the player their secret silently, but it also must not
-			// stop the game booting. Keep the damaged file alongside the regenerated one.
+			// A broken config must not stop the game booting, but silently overwriting a file the
+			// player may have hand-edited is rude. Keep the damaged copy alongside the new one.
 			HideMyBase.LOGGER.warn("Could not read {}, regenerating defaults", file, broken);
 			quarantine(file);
 			return new ClientConfig();
