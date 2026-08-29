@@ -12,6 +12,7 @@
 		"issues": "https://github.com/Drinfonty/HideMyBase/issues"
 	},
 	"license": "CC0-1.0",
+	"icon": "assets/hidemybase/icon.png",
 	"environment": "client",
 	"entrypoints": {
 		"client": [
