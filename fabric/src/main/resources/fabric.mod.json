@@ -17,6 +17,9 @@
 	"entrypoints": {
 		"client": [
 			"com.drinfonty.hidemybase.fabric.HideMyBaseFabric"
+		],
+		"modmenu": [
+			"com.drinfonty.hidemybase.fabric.ModMenuIntegration"
 		]
 	},
 	"mixins": [
