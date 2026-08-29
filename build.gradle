@@ -28,6 +28,13 @@ allprojects {
 			name = "NeoForge"
 			url = "https://maven.neoforged.net/releases/"
 		}
+		maven {
+			// ModMenu, which hosts the settings screen on Fabric. Compile-only and optional at
+			// runtime - Fabric has no mod list of its own, so without it there is simply nowhere
+			// to put the screen.
+			name = "TerraformersMC"
+			url = "https://maven.terraformersmc.com/releases/"
+		}
 	}
 }
 
